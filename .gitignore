@@ -40,4 +40,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 src/backend/go.sum
-src/backend/anonlink-backend
+src/backend/server
+src/backend/urlshortener.db
