@@ -14,7 +14,7 @@ export function URLShortener() {
 
   const handleShorten = async () => {
     try {
-      const response = await fetch("http://localhost:8080/shorten", {
+      const response = await fetch("https://api.kdev.pw/shorten", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: longUrl, domain }),
