@@ -46,6 +46,9 @@ export function LinkDisplay({ shortUrl }: LinkDisplayProps) {
               <FaClipboard />
             </motion.button>
           </div>
+          {copied && (
+            <p className="text-sm text-green-500 mt-2">URL copied to clipboard!</p>
+          )}
         </CardContent>
       </Card>
     </motion.div>
