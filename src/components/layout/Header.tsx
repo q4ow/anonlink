@@ -8,7 +8,7 @@ export default function Header() {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="mb-8 text-center text-3xl font-bold"
+      className="mb-4 text-center text-2xl font-bold md:mb-8 md:text-3xl"
     >
       AnonLink
     </motion.h1>
