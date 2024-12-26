@@ -42,3 +42,5 @@ next-env.d.ts
 src/backend/go.sum
 src/backend/server
 src/backend/urlshortener.db
+ecosystem.config.json
+src/backend/ecosystem.config.json
