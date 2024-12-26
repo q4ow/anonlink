@@ -32,7 +32,7 @@ export function LinkDisplay({ shortUrl }: LinkDisplayProps) {
               href={shortUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary hover:underline break-all"
+              className="break-all text-primary hover:underline"
             >
               {shortUrl}
             </a>
@@ -40,7 +40,7 @@ export function LinkDisplay({ shortUrl }: LinkDisplayProps) {
               onClick={handleCopy}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              className="flex items-center p-1 text-primary hover:text-primary-dark"
+              className="hover:text-primary-dark flex items-center p-1 text-primary"
               aria-label="Copy URL"
             >
               <FaClipboard />

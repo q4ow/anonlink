@@ -6,9 +6,9 @@ import ShareXUploader from "@/components/shortener/SharexUploader";
 export default function Home() {
   return (
     <>
-      <div className="text-foreground mt-8">
+      <div className="mt-8 text-foreground">
         <Navbar />
-        <main className="flex-grow flex flex-col justify-center items-center min-h-[70vh]">
+        <main className="flex min-h-[70vh] flex-grow flex-col items-center justify-center">
           <Header />
           <div className="flex flex-col items-center">
             <URLShortener />

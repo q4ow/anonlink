@@ -12,24 +12,24 @@ export default function Footer() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="text-foreground py-6 fixed bottom-0 w-full backdrop-blur-sm border-t border-border/40"
+      className="fixed bottom-0 w-full border-t border-border/40 py-6 text-foreground backdrop-blur-sm"
     >
       <div className="container mx-auto px-4">
         <p className="flex items-center justify-center gap-2 text-sm font-medium">
           Made with{" "}
-          <Heart className="inline-block w-4 h-4 text-red-500 hover:scale-110 transition-transform duration-200" />{" "}
+          <Heart className="inline-block h-4 w-4 text-red-500 transition-transform duration-200 hover:scale-110" />{" "}
           by Keiran using{" "}
-          <SiNextdotjs className="w-4 h-4text-primary hover:scale-110 transition-transform duration-200" />{" "}
+          <SiNextdotjs className="h-4text-primary w-4 transition-transform duration-200 hover:scale-110" />{" "}
           and{" "}
-          <RiTailwindCssFill className="w-4 h-4 text-[#38bdf8] hover:scale-110 transition-transform duration-200" />{" "}
+          <RiTailwindCssFill className="h-4 w-4 text-[#38bdf8] transition-transform duration-200 hover:scale-110" />{" "}
           |{" "}
           <a
             href="https://github.com/keirim/anonlink"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 font-medium transition-all duration-200 hover:text-primary group"
+            className="group flex items-center justify-center gap-2 font-medium transition-all duration-200 hover:text-primary"
           >
-            <FaGithub className="group-hover:rotate-12 transition-transform duration-200" />{" "}
+            <FaGithub className="transition-transform duration-200 group-hover:rotate-12" />{" "}
             View on GitHub
           </a>
         </p>

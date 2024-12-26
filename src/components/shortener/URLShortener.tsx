@@ -31,10 +31,16 @@ export function URLShortener() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="space-y-4 max-w-md mx-auto"
+      className="mx-auto max-w-md space-y-4"
     >
-      <URLInput value={longUrl} onChange={setLongUrl} />
-      <DomainSelector value={domain} onChange={setDomain} />
+      <URLInput
+        value={longUrl}
+        onChange={setLongUrl}
+      />
+      <DomainSelector
+        value={domain}
+        onChange={setDomain}
+      />
       <ShortenButton onClick={handleShorten} />
       {shortUrl && <LinkDisplay shortUrl={shortUrl} />}
     </motion.div>

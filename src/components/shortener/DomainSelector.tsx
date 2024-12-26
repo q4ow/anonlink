@@ -13,7 +13,10 @@ interface DomainSelectorProps {
 
 export function DomainSelector({ value, onChange }: DomainSelectorProps) {
   return (
-    <Select value={value} onValueChange={onChange}>
+    <Select
+      value={value}
+      onValueChange={onChange}
+    >
       <SelectTrigger>
         <SelectValue placeholder="Select a domain" />
       </SelectTrigger>

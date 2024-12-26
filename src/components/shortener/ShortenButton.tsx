@@ -6,7 +6,10 @@ interface ShortenButtonProps {
 
 export function ShortenButton({ onClick }: ShortenButtonProps) {
   return (
-    <Button onClick={onClick} className="w-full">
+    <Button
+      onClick={onClick}
+      className="w-full"
+    >
       Shorten URL
     </Button>
   );

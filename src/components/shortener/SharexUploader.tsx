@@ -75,13 +75,19 @@ export default function ShareXUploader() {
         </PopoverTrigger>
         <PopoverContent className="w-80">
           <div className="space-y-4">
-            <Select value={domain} onValueChange={setDomain}>
+            <Select
+              value={domain}
+              onValueChange={setDomain}
+            >
               <SelectTrigger className="bg-input text-primary">
                 <SelectValue placeholder="Select a domain" />
               </SelectTrigger>
               <SelectContent>
                 {domains.map((d) => (
-                  <SelectItem key={d} value={d}>
+                  <SelectItem
+                    key={d}
+                    value={d}
+                  >
                     {d}
                   </SelectItem>
                 ))}
