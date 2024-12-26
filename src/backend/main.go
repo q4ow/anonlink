@@ -54,31 +54,33 @@ func init() {
 }
 
 func main() {
-	var err error
-	db, err = sql.Open("sqlite3", "./urlshortener.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
+    var err error
+    db, err = sql.Open("sqlite3", "./urlshortener.db")
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer db.Close()
 
-	createTables()
+    createTables()
 
-	r := chi.NewRouter()
+    r := chi.NewRouter()
 
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.RequestID)
-	r.Use(httprate.LimitByIP(100, 1*time.Minute))
-	r.Use(corsMiddleware)
+    r.Use(middleware.Logger)
+    r.Use(middleware.Recoverer)
+    r.Use(middleware.RealIP)
+    r.Use(middleware.RequestID)
+    r.Use(httprate.LimitByIP(100, 1*time.Minute))
+    r.Use(corsMiddleware)
 
-	r.Get("/", rootRedirectHandler)
-	r.Post("/shorten", shortenHandler)
-	r.Get("/stats", statsHandler)
-	r.Get("/{shortCode}", redirectHandler)
+    fs := http.FileServer(http.Dir("./static"))
+    r.Handle("/*", http.StripPrefix("/", fs))
 
-	log.Println("Server starting on :8080")
-	log.Fatal(http.ListenAndServe(":8080", r))
+    r.Post("/shorten", shortenHandler)
+    r.Get("/stats", statsHandler)
+    r.Get("/{shortCode}", redirectHandler)
+
+    log.Println("Server starting on :8080")
+    log.Fatal(http.ListenAndServe(":8080", r))
 }
 
 func createTables() {
