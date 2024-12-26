@@ -1,14 +1,19 @@
 import Navbar from "@/components/layout/Navbar";
+import Header from "@/components/layout/Header";
 import { URLShortener } from "@/components/shortener/URLShortener";
+import ShareXUploader from "@/components/shortener/SharexUploader";
 
 export default function Home() {
   return (
     <>
-      <div className="bg-background text-foreground p-4">
+      <div className="text-foreground mt-8">
         <Navbar />
-        <main className="container mx-auto mt-8">
-          <h1 className="text-3xl font-bold text-center mb-8">AnonLink</h1>
-          <URLShortener />
+        <main className="flex-grow flex flex-col justify-center items-center min-h-[70vh]">
+          <Header />
+          <div className="flex flex-col items-center">
+            <URLShortener />
+            <ShareXUploader />
+          </div>
         </main>
       </div>
     </>
