@@ -38,7 +38,7 @@ export default function ShareXUploader() {
         URL: "{json:shortUrl}",
       },
       null,
-      2
+      2,
     );
   };
 

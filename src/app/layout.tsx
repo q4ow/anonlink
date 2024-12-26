@@ -11,27 +11,32 @@ export const metadata: Metadata = {
   title: "AnonLink",
   description: "Simple URL shortener with no tracking",
   icons: {
-    icon: [
-      { url: "/favicon.ico" },
-    ],
-    apple: { url: "https://r2.e-z.host/ca19848c-de8c-4cae-9a10-858d6fd864b7/bs87qcee.png", type: "image/png" },
+    icon: [{ url: "/favicon.ico" }],
+    apple: {
+      url: "https://r2.e-z.host/ca19848c-de8c-4cae-9a10-858d6fd864b7/bs87qcee.png",
+      type: "image/png",
+    },
   },
   openGraph: {
     title: "AnonLink",
     description: "Simple URL shortener with no tracking",
-    images: [{
-      url: "https://r2.e-z.host/ca19848c-de8c-4cae-9a10-858d6fd864b7/bs87qcee.png",
-      width: 1200,
-      height: 630,
-      alt: "AnonLink - Simple URL shortener",
-    }],
+    images: [
+      {
+        url: "https://r2.e-z.host/ca19848c-de8c-4cae-9a10-858d6fd864b7/bs87qcee.png",
+        width: 1200,
+        height: 630,
+        alt: "AnonLink - Simple URL shortener",
+      },
+    ],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "AnonLink",
     description: "Simple URL shortener with no tracking",
-    images: ["https://r2.e-z.host/ca19848c-de8c-4cae-9a10-858d6fd864b7/bs87qcee.png"],
+    images: [
+      "https://r2.e-z.host/ca19848c-de8c-4cae-9a10-858d6fd864b7/bs87qcee.png",
+    ],
   },
   metadataBase: new URL("https://anon.love"),
 };
