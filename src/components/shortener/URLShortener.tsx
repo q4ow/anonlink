@@ -19,10 +19,17 @@ export function URLShortener() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: longUrl, domain }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error(`Error: ${response.status} - ${response.statusText}`, errorData);
+        return;
+      }
+
       const data = await response.json();
       setShortUrl(data.shortUrl);
     } catch (error) {
-      console.error("Error shortening URL:", error);
+      console.error("Network error:", error);
     }
   };
 
