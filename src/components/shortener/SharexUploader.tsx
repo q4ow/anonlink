@@ -73,7 +73,7 @@ export default function ShareXUploader() {
             <FaFileUpload className="mr-2 h-4 w-4" /> ShareX Uploader
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-80">
+        <PopoverContent className="w-80 mt-2">
           <div className="space-y-4">
             <Select
               value={domain}
@@ -98,13 +98,13 @@ export default function ShareXUploader() {
                 onClick={copyToClipboard}
                 className="flex-1 bg-foreground text-background"
               >
-                <FaRegClipboard className="mr-2 h-4 w-4" /> Copy Config
+                <FaRegClipboard className="h-4 w-4" /> Copy Config
               </Button>
               <Button
                 onClick={saveToDisk}
                 className="flex-1 bg-foreground text-background"
               >
-                <FaFileDownload className="mr-2 h-4 w-4" /> Save Config
+                <FaFileDownload className="h-4 w-4" /> Save Config
               </Button>
             </div>
           </div>
