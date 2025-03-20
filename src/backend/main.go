@@ -76,7 +76,7 @@ func main() {
     
     createTables()
 
-	if err := initPreparedStatements(); err != nil {
+	  if err := initPreparedStatements(); err != nil {
         log.Fatalf("Failed to prepare statements: %v", err)
     }
     defer closePreparedStatements()
@@ -87,14 +87,12 @@ func main() {
     r.Use(middleware.Recoverer)
     r.Use(middleware.RealIP)
     r.Use(middleware.RequestID)
-	r.Use(middleware.Compress(5))
+	  r.Use(middleware.Compress(5))
     r.Use(httprate.LimitByIP(100, 1*time.Minute))
     r.Use(corsMiddleware)
 
     fs := http.FileServer(http.Dir("./static"))
     r.Handle("/*", http.StripPrefix("/", fs))
-
-	r.Use(httprate.LimitByIP(100, 1*time.Minute))
 
     shortenRateLimit := httprate.LimitByIP(10, 1*time.Minute)
     r.With(shortenRateLimit).Post("/shorten", shortenHandler)
