@@ -10,9 +10,9 @@ import (
 	"math/big"
 	"net/http"
 	"os"
-    "os/signal"
+	"os/signal"
 	"strings"
-    "syscall"
+	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -46,89 +46,98 @@ type TopURL struct {
 	CreatedAt string `json:"createdAt"`
 }
 
+type HealthResponse struct {
+	Status    string `json:"status"`
+	Timestamp string `json:"timestamp"`
+	TotalLinks int `json:"totalLinks"`
+	TotalClicks int `json:"totalClicks"`
+}
+
 const (
 	shortCodeLength = 6
 	charset         = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 )
 
 var (
-    db *sql.DB
+	db *sql.DB
 
-    stmtCheckShortCode *sql.Stmt
-    stmtInsertURL *sql.Stmt
-    stmtUpdateClicks *sql.Stmt
-    stmtGetStats *sql.Stmt
-    stmtGetDomainStats *sql.Stmt
-    stmtGetTopURLs *sql.Stmt
+	stmtCheckShortCode *sql.Stmt
+	stmtInsertURL      *sql.Stmt
+	stmtUpdateClicks   *sql.Stmt
+	stmtGetStats       *sql.Stmt
+	stmtGetDomainStats *sql.Stmt
+	stmtGetTopURLs     *sql.Stmt
 )
 
 func main() {
-    var err error
-    db, err = sql.Open("sqlite3", "./urlshortener.db")
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer db.Close()
-    
-    db.SetMaxOpenConns(25)
-    db.SetMaxIdleConns(5)
-    db.SetConnMaxLifetime(5 * time.Minute)
-    
-    createTables()
+	var err error
+	db, err = sql.Open("sqlite3", "./urlshortener.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
 
-	  if err := initPreparedStatements(); err != nil {
-        log.Fatalf("Failed to prepare statements: %v", err)
-    }
-    defer closePreparedStatements()
+	db.SetMaxOpenConns(25)
+	db.SetMaxIdleConns(5)
+	db.SetConnMaxLifetime(5 * time.Minute)
 
-    r := chi.NewRouter()
+	createTables()
 
-    r.Use(middleware.Logger)
-    r.Use(middleware.Recoverer)
-    r.Use(middleware.RealIP)
-    r.Use(middleware.RequestID)
-	  r.Use(middleware.Compress(5))
-    r.Use(httprate.LimitByIP(100, 1*time.Minute))
-    r.Use(corsMiddleware)
+	if err := initPreparedStatements(); err != nil {
+		log.Fatalf("Failed to prepare statements: %v", err)
+	}
+	defer closePreparedStatements()
 
-    fs := http.FileServer(http.Dir("./static"))
-    r.Handle("/*", http.StripPrefix("/", fs))
+	r := chi.NewRouter()
 
-    shortenRateLimit := httprate.LimitByIP(10, 1*time.Minute)
-    r.With(shortenRateLimit).Post("/shorten", shortenHandler)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.RequestID)
+	r.Use(middleware.Compress(5))
+	r.Use(httprate.LimitByIP(100, 1*time.Minute))
+	r.Use(corsMiddleware)
 
-    r.Get("/stats", statsHandler)
-    r.Get("/{shortCode}", redirectHandler)
+	fs := http.FileServer(http.Dir("./static"))
+	r.Handle("/*", http.StripPrefix("/", fs))
 
-    srv := &http.Server{
-        Addr:    ":8080",
-        Handler: r,
-    }
+	shortenRateLimit := httprate.LimitByIP(10, 1*time.Minute)
+	r.With(shortenRateLimit).Post("/shorten", shortenHandler)
 
-    go func() {
-        log.Printf("Server starting on %s", srv.Addr)
-        if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-            log.Fatalf("Server error: %v", err)
-        }
-    }()
+	r.Get("/stats", statsHandler)
+	r.Get("/{shortCode}", redirectHandler)
+	r.Get("/health", healthHandler)
+	r.Get("/", rootRedirectHandler)
 
-    quit := make(chan os.Signal, 1)
-    signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
-    <-quit
-    log.Println("Server shutting down...")
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: r,
+	}
 
-    ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-    defer cancel()
+	go func() {
+		log.Printf("Server starting on %s", srv.Addr)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Server error: %v", err)
+		}
+	}()
 
-    if err := srv.Shutdown(ctx); err != nil {
-        log.Fatalf("Server forced to shutdown: %v", err)
-    }
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+	<-quit
+	log.Println("Server shutting down...")
 
-    log.Println("Server exited properly")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("Server forced to shutdown: %v", err)
+	}
+
+	log.Println("Server exited properly")
 }
 
 func logError(handler string, err error) {
-    log.Printf("[ERROR] %s: %v", handler, err)
+	log.Printf("[ERROR] %s: %v", handler, err)
 }
 
 func createTables() {
@@ -154,81 +163,81 @@ func createTables() {
 }
 
 func initPreparedStatements() error {
-    var err error
-    
-    stmtCheckShortCode, err = db.Prepare("SELECT EXISTS(SELECT 1 FROM urls WHERE short_code = ?)")
-    if err != nil {
-        return err
-    }
-    
-    stmtInsertURL, err = db.Prepare("INSERT INTO urls (short_code, original_url, domain) VALUES (?, ?, ?)")
-    if err != nil {
-        return err
-    }
-    
-    stmtUpdateClicks, err = db.Prepare("UPDATE urls SET clicks = clicks + 1 WHERE short_code = ? RETURNING original_url")
-    if err != nil {
-        return err
-    }
-    
-    stmtGetStats, err = db.Prepare(`
+	var err error
+
+	stmtCheckShortCode, err = db.Prepare("SELECT EXISTS(SELECT 1 FROM urls WHERE short_code = ?)")
+	if err != nil {
+		return err
+	}
+
+	stmtInsertURL, err = db.Prepare("INSERT INTO urls (short_code, original_url, domain) VALUES (?, ?, ?)")
+	if err != nil {
+		return err
+	}
+
+	stmtUpdateClicks, err = db.Prepare("UPDATE urls SET clicks = clicks + 1 WHERE short_code = ? RETURNING original_url")
+	if err != nil {
+		return err
+	}
+
+	stmtGetStats, err = db.Prepare(`
         SELECT COUNT(*), COALESCE(SUM(clicks), 0) FROM urls
     `)
-    if err != nil {
-        return err
-    }
-    
-    stmtGetDomainStats, err = db.Prepare(`
+	if err != nil {
+		return err
+	}
+
+	stmtGetDomainStats, err = db.Prepare(`
         SELECT domain, SUM(clicks) as total_clicks, COUNT(*) as total_links
         FROM urls GROUP BY domain
     `)
-    if err != nil {
-        return err
-    }
-    
-    stmtGetTopURLs, err = db.Prepare(`
+	if err != nil {
+		return err
+	}
+
+	stmtGetTopURLs, err = db.Prepare(`
         SELECT original_url, clicks, short_code, created_at 
         FROM urls ORDER BY clicks DESC LIMIT 3
     `)
-    if err != nil {
-        return err
-    }
-    
-    return nil
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func closePreparedStatements() {
-    if stmtCheckShortCode != nil {
-        stmtCheckShortCode.Close()
-    }
-    if stmtInsertURL != nil {
-        stmtInsertURL.Close()
-    }
-    if stmtUpdateClicks != nil {
-        stmtUpdateClicks.Close()
-    }
+	if stmtCheckShortCode != nil {
+		stmtCheckShortCode.Close()
+	}
+	if stmtInsertURL != nil {
+		stmtInsertURL.Close()
+	}
+	if stmtUpdateClicks != nil {
+		stmtUpdateClicks.Close()
+	}
 	if stmtGetStats != nil {
-        stmtGetStats.Close()
-    }
-    if stmtGetDomainStats != nil {
-        stmtGetDomainStats.Close()
-    }
-    if stmtGetTopURLs != nil {
-        stmtGetTopURLs.Close()
-    }
+		stmtGetStats.Close()
+	}
+	if stmtGetDomainStats != nil {
+		stmtGetDomainStats.Close()
+	}
+	if stmtGetTopURLs != nil {
+		stmtGetTopURLs.Close()
+	}
 }
 
 func generateShortCode() (string, error) {
-    code := make([]byte, shortCodeLength)
-    for i := range code {
-        randomIndex, err := rand.Int(rand.Reader, 
-            new(big.Int).SetInt64(int64(len(charset))))
-        if err != nil {
-            return "", fmt.Errorf("failed to generate random number: %w", err)
-        }
-        code[i] = charset[randomIndex.Int64()]
-    }
-    return string(code), nil
+	code := make([]byte, shortCodeLength)
+	for i := range code {
+		randomIndex, err := rand.Int(rand.Reader,
+			new(big.Int).SetInt64(int64(len(charset))))
+		if err != nil {
+			return "", fmt.Errorf("failed to generate random number: %w", err)
+		}
+		code[i] = charset[randomIndex.Int64()]
+	}
+	return string(code), nil
 }
 
 func isValidURL(url string) bool {
@@ -236,80 +245,80 @@ func isValidURL(url string) bool {
 }
 
 func shortenHandler(w http.ResponseWriter, r *http.Request) {
-    ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
-    defer cancel()
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel()
 
-    var req URLRequest
-    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-        logError("shortenHandler/decode", err)
-        http.Error(w, "Invalid request body", http.StatusBadRequest)
-        return
-    }
+	var req URLRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		logError("shortenHandler/decode", err)
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
 
-    if !isValidURL(req.URL) {
-        http.Error(w, "Invalid URL format", http.StatusBadRequest)
-        return
-    }
+	if !isValidURL(req.URL) {
+		http.Error(w, "Invalid URL format", http.StatusBadRequest)
+		return
+	}
 
-    tx, err := db.BeginTx(ctx, nil)
-    if err != nil {
-        logError("shortenHandler/transaction", err)
-        http.Error(w, "Database error", http.StatusInternalServerError)
-        return
-    }
-    defer tx.Rollback()
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		logError("shortenHandler/transaction", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
 
-    var shortCode string
-    for {
-        shortCode, err = generateShortCode()
-        if err != nil {
-            logError("shortenHandler/generateShortCode", err)
-            http.Error(w, "Server error", http.StatusInternalServerError)
-            return
-        }
-        
-        var exists bool
-        err = tx.StmtContext(ctx, stmtCheckShortCode).QueryRowContext(ctx, shortCode).Scan(&exists)
-        if err != nil {
-            logError("shortenHandler/checkShortCode", err)
-            http.Error(w, "Database error", http.StatusInternalServerError)
-            return
-        }
-        if !exists {
-            break
-        }
-    }
+	var shortCode string
+	for {
+		shortCode, err = generateShortCode()
+		if err != nil {
+			logError("shortenHandler/generateShortCode", err)
+			http.Error(w, "Server error", http.StatusInternalServerError)
+			return
+		}
 
-    _, err = tx.StmtContext(ctx, stmtInsertURL).ExecContext(ctx, shortCode, req.URL, req.Domain)
-    if err != nil {
-        logError("shortenHandler/insertURL", err)
-        http.Error(w, "Database error", http.StatusInternalServerError)
-        return
-    }
+		var exists bool
+		err = tx.StmtContext(ctx, stmtCheckShortCode).QueryRowContext(ctx, shortCode).Scan(&exists)
+		if err != nil {
+			logError("shortenHandler/checkShortCode", err)
+			http.Error(w, "Database error", http.StatusInternalServerError)
+			return
+		}
+		if !exists {
+			break
+		}
+	}
 
-    if err = tx.Commit(); err != nil {
-        logError("shortenHandler/commit", err)
-        http.Error(w, "Database error", http.StatusInternalServerError)
-        return
-    }
+	_, err = tx.StmtContext(ctx, stmtInsertURL).ExecContext(ctx, shortCode, req.URL, req.Domain)
+	if err != nil {
+		logError("shortenHandler/insertURL", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
 
-    response := URLResponse{
-        ShortCode: shortCode,
-        ShortURL:  "https://" + req.Domain + "/" + shortCode,
-    }
+	if err = tx.Commit(); err != nil {
+		logError("shortenHandler/commit", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
 
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(response)
+	response := URLResponse{
+		ShortCode: shortCode,
+		ShortURL:  "https://" + req.Domain + "/" + shortCode,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 func redirectHandler(w http.ResponseWriter, r *http.Request) {
-    ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
-    defer cancel()
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
 
-    shortCode := chi.URLParam(r, "shortCode")
+	shortCode := chi.URLParam(r, "shortCode")
 
-    var originalURL string
-    err := stmtUpdateClicks.QueryRowContext(ctx, shortCode).Scan(&originalURL)
+	var originalURL string
+	err := stmtUpdateClicks.QueryRowContext(ctx, shortCode).Scan(&originalURL)
 
 	if err == sql.ErrNoRows {
 		http.Error(w, "Short URL not found", http.StatusNotFound)
@@ -324,51 +333,51 @@ func redirectHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func statsHandler(w http.ResponseWriter, r *http.Request) {
-    ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-    defer cancel()
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
 
-    stats := Stats{
-        ClicksPerDomain: make(map[string]int),
-        LinksPerDomain:  make(map[string]int),
-    }
+	stats := Stats{
+		ClicksPerDomain: make(map[string]int),
+		LinksPerDomain:  make(map[string]int),
+	}
 
-    err := db.QueryRowContext(ctx,
-        `SELECT 
+	err := db.QueryRowContext(ctx,
+		`SELECT 
             COUNT(*), 
             COALESCE(SUM(clicks), 0) 
         FROM urls`).
-        Scan(&stats.TotalLinks, &stats.TotalClicks)
-    if err != nil {
-        http.Error(w, "Database error", http.StatusInternalServerError)
-        return
-    }
+		Scan(&stats.TotalLinks, &stats.TotalClicks)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
 
-    rows, err := db.QueryContext(ctx,
-        `SELECT 
+	rows, err := db.QueryContext(ctx,
+		`SELECT 
             domain, 
             SUM(clicks) as total_clicks,
             COUNT(*) as total_links
         FROM urls 
         GROUP BY domain`)
-    if err != nil {
-        http.Error(w, "Database error", http.StatusInternalServerError)
-        return
-    }
-    defer rows.Close()
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
 
-    for rows.Next() {
-        var domain string
-        var clicks, count int
-        if err := rows.Scan(&domain, &clicks, &count); err != nil {
-            http.Error(w, "Database error", http.StatusInternalServerError)
-            return
-        }
-        stats.ClicksPerDomain[domain] = clicks
-        stats.LinksPerDomain[domain] = count
-    }
+	for rows.Next() {
+		var domain string
+		var clicks, count int
+		if err := rows.Scan(&domain, &clicks, &count); err != nil {
+			http.Error(w, "Database error", http.StatusInternalServerError)
+			return
+		}
+		stats.ClicksPerDomain[domain] = clicks
+		stats.LinksPerDomain[domain] = count
+	}
 
-    rows, err = db.QueryContext(ctx,
-        `SELECT original_url, clicks, short_code, created_at 
+	rows, err = db.QueryContext(ctx,
+		`SELECT original_url, clicks, short_code, created_at 
          FROM urls 
          ORDER BY clicks DESC 
          LIMIT 3`)
@@ -388,23 +397,33 @@ func statsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-    w.Header().Set("Cache-Control", "public, max-age=60")
-    json.NewEncoder(w).Encode(stats)
+	w.Header().Set("Cache-Control", "public, max-age=60")
+	json.NewEncoder(w).Encode(stats)
 }
 
 func corsMiddleware(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        w.Header().Set("Access-Control-Allow-Origin", "*")
-        w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-        w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-        if r.Method == http.MethodOptions {
-            w.WriteHeader(http.StatusOK)
-            return
-        }
-        next.ServeHTTP(w, r)
-    })
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 func rootRedirectHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "https://anon.love", http.StatusMovedPermanently)
+}
+
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	healthResponse := HealthResponse{
+		Status:    "OK",
+		Timestamp: time.Now().UTC().String(),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(healthResponse)
 }

@@ -22,6 +22,7 @@ export function DomainSelector({ value, onChange }: DomainSelectorProps) {
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="kdev.pw">kdev.pw</SelectItem>
+        <SelectItem value="slop.lat">slop.lat</SelectItem>
         <SelectItem value="keiran.tech">keiran.tech</SelectItem>
         <SelectItem value="kuuichi.xyz">kuuichi.xyz</SelectItem>
         <SelectItem value="keirandev.me">keirandev.me</SelectItem>
