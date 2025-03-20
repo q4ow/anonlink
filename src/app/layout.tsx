@@ -52,7 +52,7 @@ export default function RootLayout({
       className="dark"
     >
       <body className={`${inter.className} relative`}>
-        <div className="fixed inset-0 -z-10 opacity-30">
+        <div className="fixed inset-0 -z-10 opacity-10">
           <GridPattern />
         </div>
         <AnimatedTitle />

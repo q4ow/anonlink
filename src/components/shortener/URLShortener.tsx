@@ -6,6 +6,14 @@ import { URLInput } from "@/components/shortener/URLInput";
 import { DomainSelector } from "@/components/shortener/DomainSelector";
 import { ShortenButton } from "@/components/shortener/ShortenButton";
 import { LinkDisplay } from "@/components/shortener/LinkDisplay";
+import ShareXUploader from "./SharexUploader";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
 
 export function URLShortener() {
   const [longUrl, setLongUrl] = useState("");
@@ -22,7 +30,10 @@ export function URLShortener() {
 
       if (!response.ok) {
         const errorData = await response.text();
-        console.error(`Error: ${response.status} - ${response.statusText}`, errorData);
+        console.error(
+          `Error: ${response.status} - ${response.statusText}`,
+          errorData,
+        );
         return;
       }
 
@@ -38,18 +49,30 @@ export function URLShortener() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="mx-auto max-w-md space-y-4"
     >
-      <URLInput
-        value={longUrl}
-        onChange={setLongUrl}
-      />
-      <DomainSelector
-        value={domain}
-        onChange={setDomain}
-      />
-      <ShortenButton onClick={handleShorten} />
-      {shortUrl && <LinkDisplay shortUrl={shortUrl} />}
+      <Card className="mx-auto max-w-md">
+        <CardHeader>
+          <CardTitle>URL Shortener</CardTitle>
+          <CardDescription>
+            Shorten your URLs with a custom domain
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <URLInput
+            value={longUrl}
+            onChange={setLongUrl}
+          />
+          <DomainSelector
+            value={domain}
+            onChange={setDomain}
+          />
+          <ShortenButton onClick={handleShorten} />
+          {shortUrl && <LinkDisplay shortUrl={shortUrl} />}
+          <div className="flex justify-center">
+            <ShareXUploader />
+          </div>
+        </CardContent>
+      </Card>
     </motion.div>
   );
 }

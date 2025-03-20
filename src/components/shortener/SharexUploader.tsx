@@ -62,7 +62,6 @@ export default function ShareXUploader() {
 
   return (
     <motion.div
-      className="mt-4"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
@@ -73,7 +72,7 @@ export default function ShareXUploader() {
             <FaFileUpload className="mr-2 h-4 w-4" /> ShareX Uploader
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-80 mt-2">
+        <PopoverContent className="mt-9 w-80">
           <div className="space-y-4">
             <Select
               value={domain}

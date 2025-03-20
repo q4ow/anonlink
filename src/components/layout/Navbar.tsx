@@ -4,6 +4,9 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 
 export default function Navbar() {
+  const linkStyles =
+    "rounded px-4 py-2 transition-all duration-150 ease-linear hover:bg-foreground/10";
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
@@ -11,24 +14,21 @@ export default function Navbar() {
       transition={{ duration: 0.5 }}
       className="mx-4 flex justify-center md:mx-auto"
     >
-      <div className="mb-4 flex w-full items-center justify-center rounded-lg border-2 border-border p-3 text-foreground backdrop-blur-sm md:mb-8 md:max-w-3xl md:justify-between md:p-4">
-        <h1 className="text-xl font-bold md:text-2xl">Anonlove</h1>
-        <div className="hidden items-center gap-2 md:flex md:space-x-4">
+      <div className="flex w-full items-center justify-between rounded-lg border-2 border-border p-2 text-foreground backdrop-blur-sm md:mb-8 md:max-w-3xl">
+        <Link
+          className={`font-semibold text-foreground ${linkStyles}`}
+          href="/"
+        >
+          Anonlove
+        </Link>
+
+        <div className="hidden md:block">
           <Link
-            href="/"
-            passHref
+            href="https://github.com/q4ow/anonlink"
+            className={linkStyles}
+            target="_blank"
           >
-            <button className="rounded px-3 py-1.5 text-sm transition-all duration-150 ease-linear hover:bg-foreground/10 md:px-4 md:py-2 md:text-base">
-              AnonLink
-            </button>
-          </Link>
-          <Link
-            href="https://keiran.cc"
-            passHref
-          >
-            <button className="rounded px-3 py-1.5 text-sm transition-all duration-150 ease-linear hover:bg-foreground/10 md:px-4 md:py-2 md:text-base">
-              AnonHost
-            </button>
+            Source
           </Link>
         </div>
       </div>
