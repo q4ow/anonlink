@@ -25,8 +25,8 @@ export default function ShareXUploader() {
   const generateConfig = (domain: string) => {
     return JSON.stringify(
       {
-        Version: "14.0.0",
-        Name: "AnonLink Shortener",
+        Version: "17.0.0",
+        Name: `AnonLink Shortener (${domain})`,
         DestinationType: "URLShortener",
         RequestMethod: "POST",
         RequestURL: "https://api.kdev.pw/shorten",

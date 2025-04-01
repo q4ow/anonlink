@@ -47,10 +47,10 @@ type TopURL struct {
 }
 
 type HealthResponse struct {
-	Status    string `json:"status"`
-	Timestamp string `json:"timestamp"`
-	TotalLinks int `json:"totalLinks"`
-	TotalClicks int `json:"totalClicks"`
+	Status      string `json:"status"`
+	Timestamp   string `json:"timestamp"`
+	TotalLinks  int    `json:"totalLinks"`
+	TotalClicks int    `json:"totalClicks"`
 }
 
 const (
@@ -67,6 +67,8 @@ var (
 	stmtGetStats       *sql.Stmt
 	stmtGetDomainStats *sql.Stmt
 	stmtGetTopURLs     *sql.Stmt
+	stmtGetTotalClicks *sql.Stmt // New prepared statement
+	stmtGetTotalLinks  *sql.Stmt // New prepared statement
 )
 
 func main() {
@@ -196,9 +198,19 @@ func initPreparedStatements() error {
 	}
 
 	stmtGetTopURLs, err = db.Prepare(`
-        SELECT original_url, clicks, short_code, created_at 
+        SELECT original_url, clicks, short_code, created_at
         FROM urls ORDER BY clicks DESC LIMIT 3
     `)
+	if err != nil {
+		return err
+	}
+
+	stmtGetTotalClicks, err = db.Prepare("SELECT COALESCE(SUM(clicks), 0) FROM urls")
+	if err != nil {
+		return err
+	}
+
+	stmtGetTotalLinks, err = db.Prepare("SELECT COUNT(*) FROM urls")
 	if err != nil {
 		return err
 	}
@@ -224,6 +236,12 @@ func closePreparedStatements() {
 	}
 	if stmtGetTopURLs != nil {
 		stmtGetTopURLs.Close()
+	}
+	if stmtGetTotalClicks != nil {
+		stmtGetTotalClicks.Close()
+	}
+	if stmtGetTotalLinks != nil {
+		stmtGetTotalLinks.Close()
 	}
 }
 
@@ -342,9 +360,9 @@ func statsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := db.QueryRowContext(ctx,
-		`SELECT 
-            COUNT(*), 
-            COALESCE(SUM(clicks), 0) 
+		`SELECT
+            COUNT(*),
+            COALESCE(SUM(clicks), 0)
         FROM urls`).
 		Scan(&stats.TotalLinks, &stats.TotalClicks)
 	if err != nil {
@@ -353,11 +371,11 @@ func statsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rows, err := db.QueryContext(ctx,
-		`SELECT 
-            domain, 
+		`SELECT
+            domain,
             SUM(clicks) as total_clicks,
             COUNT(*) as total_links
-        FROM urls 
+        FROM urls
         GROUP BY domain`)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
@@ -377,9 +395,9 @@ func statsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rows, err = db.QueryContext(ctx,
-		`SELECT original_url, clicks, short_code, created_at 
-         FROM urls 
-         ORDER BY clicks DESC 
+		`SELECT original_url, clicks, short_code, created_at
+         FROM urls
+         ORDER BY clicks DESC
          LIMIT 3`)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
@@ -419,9 +437,30 @@ func rootRedirectHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	var totalLinks int
+	err := stmtGetTotalLinks.QueryRowContext(ctx).Scan(&totalLinks)
+	if err != nil {
+		logError("healthHandler/getTotalLinks", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	var totalClicks int
+	err = stmtGetTotalClicks.QueryRowContext(ctx).Scan(&totalClicks)
+	if err != nil {
+		logError("healthHandler/getTotalClicks", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
 	healthResponse := HealthResponse{
-		Status:    "OK",
-		Timestamp: time.Now().UTC().String(),
+		Status:      "OK",
+		Timestamp:   time.Now().UTC().String(),
+		TotalLinks:  totalLinks,
+		TotalClicks: totalClicks,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
